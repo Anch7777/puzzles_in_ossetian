@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h1>Решите ребус</h1>
+    <img src="{{ url_for('static', filename='images/' + rebus.image) }}" alt="Ребус" class="img-fluid mb-3">
+    <form method="POST" class="mb-3">
+        <input type="text" name="answer" placeholder="Введите ответ" class="form-control mb-2">
+        <button type="submit" class="btn btn-success">Проверить</button>
+    </form>
+    <div class="mb-3">
+        <button id="hint-button" class="btn btn-warning">Подсказка</button>
+        <p id="hint-text" class="mt-2"></p>
+    </div>
+    <p>Ваш текущий счет: {{ score }}</p>
+</div>
+{% endblock %}

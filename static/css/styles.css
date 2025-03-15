@@ -1,0 +1,18 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.display-1 {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #007bff;
+    text-transform: uppercase;
+}
+
+.navbar {
+    margin-bottom: 20px;
+}
+
+.alert {
+    margin-top: 20px;
+}
