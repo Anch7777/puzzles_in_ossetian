@@ -11,11 +11,11 @@
             </tr>
         </thead>
         <tbody>
-            {% for rating in ratings %}
-            <tr>
-                <td>{{ rating.name }}</td>
-                <td>{{ rating.score }}</td>
-            </tr>
+            {% for user in ratings %}
+                <tr>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.score }}</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>

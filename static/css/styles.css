@@ -9,10 +9,7 @@ body {
     text-transform: uppercase;
 }
 
-.navbar {
-    margin-bottom: 20px;
-}
-
-.alert {
-    margin-top: 20px;
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
 }
