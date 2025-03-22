@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h1>Поздравляем!</h1>
+    <p>Вы решили все ребусы!</p>
+    <img src="{{ url_for('static', filename='images/congratulations.png') }}" alt="Поздравления" class="img-fluid mb-3">
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Вернуться на главную</a>
+</div>
+{% endblock %}
