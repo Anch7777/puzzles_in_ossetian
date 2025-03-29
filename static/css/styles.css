@@ -13,3 +13,8 @@ body {
     background-color: #d1ecf1;
     color: #0c5460;
 }
+
+.modal.show {
+    display: block;
+    background-color: rgba(0, 0, 0, 0.5);
+}
