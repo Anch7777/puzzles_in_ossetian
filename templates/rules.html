@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center mt-5">
-    <h1 class="display-4 text-primary">Правила игры</h1>
-    <p class="lead">1. Отгадайте ребус.</p>
-    <p class="lead">2. Используйте кнопки с буквами осетинского алфавита для ввода ответа.</p>
-    <p class="lead">3. Нажмите "Подсказка", чтобы получить подсказку (доступно 3 подсказки).</p>
-    <p class="lead">4. Нажмите "Следующий ребус", чтобы перейти к следующему ребусу.</p>
-    <p class="lead">5. Если вы зарегистрированы, ваш рейтинг будет отображаться внизу окна.</p>
-    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg mt-4">OK</a>
+<div class="text-center">
+    <h1 class="mb-4">Правила игры</h1>
+    <ol class="list-group list-group-numbered mb-4">
+        <li class="list-group-item">Отгадайте ребус, используя подсказки</li>
+        <li class="list-group-item">Для ввода ответа используйте кнопки с буквами осетинского алфавита</li>
+        <li class="list-group-item">У вас есть 3 подсказки для каждого ребуса</li>
+        <li class="list-group-item">За каждый правильный ответ вы получаете 20 очков</li>
+        <li class="list-group-item">Ваш рейтинг сохраняется в системе</li>
+    </ol>
+    <button onclick="window.location.href='{{ url_for('index') }}'" class="btn btn-primary">OK</button>
 </div>
 {% endblock %}

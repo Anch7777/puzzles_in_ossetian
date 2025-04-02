@@ -1,18 +1,17 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from data.db_session import db
-from data.users import User
-from data.riddles import Riddle
 import os
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from data._all_models import db, User, Riddle
 
+# Создание экземпляра приложения
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
-
-# Определение BASE_DIR
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+app.secret_key = 'your_secret_key'  # Ключ для работы с сессиями
 
 # Настройка пути к базе данных
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "data", "puzzles.db")}'
+DATABASE_PATH = os.path.abspath('db/puzzles.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DATABASE_PATH}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Инициализация базы данных
 db.init_app(app)
 
 # Буквы осетинского алфавита
@@ -21,18 +20,19 @@ ossetian_alphabet = [
     'р', 'с', 'у', 'ф', 'х', 'хъ', 'ы', '-'
 ]
 
-def initialize_database():
-    """Инициализация базы данных: создание таблиц и добавление начальных данных."""
-    with app.app_context():
-        db.create_all()  # Создание таблиц
+# Создание таблиц и заполнение ребусов при первом запуске
+with app.app_context():
+    try:
+        # Проверяем, существует ли папка db/
+        db_dir = os.path.dirname(DATABASE_PATH)
+        if not os.path.exists(db_dir):
+            os.makedirs(db_dir)  # Создаем папку db/, если её нет
 
-        # Проверка наличия ребусов в базе данных
-        if Riddle.query.count() == 0:
-            # Очистка таблицы ребусов (если она не пуста)
-            db.session.query(Riddle).delete()
-            db.session.commit()
+        # Создаем таблицы
+        db.create_all()
 
-            # Добавление новых ребусов
+        # Проверяем, есть ли уже ребусы в базе данных
+        if not Riddle.query.first():
             rebuses = [
                 {"image": "rebus1.png", "answer": "хæрисджын", "hints": "Первая буква 'х', В слове 8 букв, æ дж"},
                 {"image": "rebus2.png", "answer": "бирæгъзæнг", "hints": "Первая буква 'б', В слове 9 букв, æ гъ"},
@@ -40,11 +40,16 @@ def initialize_database():
                 {"image": "rebus4.png", "answer": "сындзыхъæу", "hints": "Первая буква 'с', В слове 8 букв, дз хъ"},
                 {"image": "rebus5.png", "answer": "дур-дур", "hints": "Первая буква 'д', В слове 7 букв, д"}
             ]
+
             for r in rebuses:
                 new_riddle = Riddle(image=r['image'], answer=r['answer'], hints=r['hints'])
                 db.session.add(new_riddle)
-            db.session.commit()
 
+            db.session.commit()
+    except Exception as e:
+        print(f"Ошибка при создании базы данных: {e}")
+
+# Маршруты
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -86,47 +91,43 @@ def register():
 @app.route('/game', methods=['GET', 'POST'])
 def game():
     if 'username' not in session:
-        session['username'] = 'guest'
-        session['score'] = 0
-        session['solved_rebuses'] = ''
+        return redirect(url_for('index'))
+
     rebuses = Riddle.query.all()
-    user = User.query.filter_by(name=session['username']).first() if session['username'] != 'guest' else None
-    solved_rebuses = set(session['solved_rebuses'].split(',') if session['solved_rebuses'] else [])
+    user = User.query.filter_by(name=session['username']).first()
+    solved_rebuses = set(user.solved_rebuses.split(',') if user.solved_rebuses else [])
     current_rebus_id = int(request.args.get('rebus_id', 1))
     current_rebus = next((r for r in rebuses if r.id == current_rebus_id), None)
-    hints_left = 3 - len([hint for hint in session.get('used_hints', {}).get(str(current_rebus_id), [])])
+
+    hints_left = 3
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'check_answer':
             user_answer = request.form['answer'].strip()
             if user_answer == current_rebus.answer:
                 if str(current_rebus.id) not in solved_rebuses:
-                    session['score'] = session.get('score', 0) + 20
+                    user.score += 20
                     solved_rebuses.add(str(current_rebus.id))
-                    session['solved_rebuses'] = ','.join(solved_rebuses)
+                    user.solved_rebuses = ','.join(solved_rebuses)
+                    db.session.commit()
+                    session['score'] = user.score
                     flash('Правильно!', 'success')
                 return redirect(url_for('game', rebus_id=current_rebus_id + 1))
             else:
                 flash('Неправильно. Попробуйте еще раз.', 'danger')
         elif action == 'show_hint':
-            used_hints = session.setdefault('used_hints', {})
-            if len(used_hints.get(str(current_rebus_id), [])) < 3:
-                hints = current_rebus.hints.split(',')
-                used_hints.setdefault(str(current_rebus_id), []).append(hints[len(used_hints[str(current_rebus_id)])])
-                session.modified = True
-                flash(f"Подсказка: {hints[len(used_hints[str(current_rebus_id)]) - 1]}", 'info')
-            else:
-                flash("Вы использовали все подсказки для этого ребуса!", 'warning')
+            hints_left -= 1
+            flash(f"Подсказка: {current_rebus.hints}", 'info')
+
     if current_rebus is None:
         return redirect(url_for('success'))
-    show_register_modal = session['username'] == 'guest' and len(solved_rebuses) >= 3
+
     return render_template(
         'game.html',
         rebus=current_rebus,
         score=session['score'],
         ossetian_alphabet=ossetian_alphabet,
-        hints_left=hints_left,
-        show_register_modal=show_register_modal
+        hints_left=hints_left
     )
 
 @app.route('/rating')
@@ -139,6 +140,4 @@ def success():
     return render_template('success.html')
 
 if __name__ == '__main__':
-    # Инициализация базы данных при первом запуске
-    initialize_database()
     app.run(debug=True)

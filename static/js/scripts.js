@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // Получаем элементы подсказки
     const hintButton = document.getElementById("hint-button");
     const hintText = document.getElementById("hint-text");
 

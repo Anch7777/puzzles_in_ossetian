@@ -1,4 +1,4 @@
-from data.db_session import db
+from data._all_models import db
 
 class User(db.Model):
     __tablename__ = 'users'
