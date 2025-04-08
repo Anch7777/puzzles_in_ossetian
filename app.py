@@ -88,36 +88,45 @@ def register():
             return redirect(url_for('game'))
     return render_template('register.html')
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
 @app.route('/game', methods=['GET', 'POST'])
 def game():
+    # Если пользователь не вошел в систему, начинаем игру в режиме гостя
     if 'username' not in session:
-        return redirect(url_for('index'))
+        session['username'] = 'Guest'
+        session['score'] = 0
 
     rebuses = Riddle.query.all()
-    user = User.query.filter_by(name=session['username']).first()
-    solved_rebuses = set(user.solved_rebuses.split(',') if user.solved_rebuses else [])
     current_rebus_id = int(request.args.get('rebus_id', 1))
     current_rebus = next((r for r in rebuses if r.id == current_rebus_id), None)
 
-    hints_left = 3
+    # Подсказки
+    hints_left_key = f'hints_left_{current_rebus_id}'
+    hints_left = session.get(hints_left_key, 3)
+
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'check_answer':
             user_answer = request.form['answer'].strip()
             if user_answer == current_rebus.answer:
-                if str(current_rebus.id) not in solved_rebuses:
-                    user.score += 20
-                    solved_rebuses.add(str(current_rebus.id))
-                    user.solved_rebuses = ','.join(solved_rebuses)
-                    db.session.commit()
-                    session['score'] = user.score
+                if not session.get(f'solved_{current_rebus_id}', False):
+                    session['score'] = min(session['score'] + 20, 100)  # Ограничение на максимальные очки
+                    session[f'solved_{current_rebus_id}'] = True
                     flash('Правильно!', 'success')
                 return redirect(url_for('game', rebus_id=current_rebus_id + 1))
             else:
                 flash('Неправильно. Попробуйте еще раз.', 'danger')
         elif action == 'show_hint':
-            hints_left -= 1
-            flash(f"Подсказка: {current_rebus.hints}", 'info')
+            if hints_left > 0:
+                hints_left -= 1
+                session[hints_left_key] = hints_left
+                flash(f"Подсказка: {current_rebus.hints}", 'info')
+            else:
+                flash("У вас закончились подсказки для этого ребуса!", 'warning')
 
     if current_rebus is None:
         return redirect(url_for('success'))

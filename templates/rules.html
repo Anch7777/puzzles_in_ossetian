@@ -2,13 +2,33 @@
 {% block content %}
 <div class="text-center">
     <h1 class="mb-4">Правила игры</h1>
-    <ol class="list-group list-group-numbered mb-4">
-        <li class="list-group-item">Отгадайте ребус, используя подсказки</li>
-        <li class="list-group-item">Для ввода ответа используйте кнопки с буквами осетинского алфавита</li>
-        <li class="list-group-item">У вас есть 3 подсказки для каждого ребуса</li>
-        <li class="list-group-item">За каждый правильный ответ вы получаете 20 очков</li>
-        <li class="list-group-item">Ваш рейтинг сохраняется в системе</li>
-    </ol>
-    <button onclick="window.location.href='{{ url_for('index') }}'" class="btn btn-primary">OK</button>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <ol class="list-group list-group-flush">
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-lightbulb me-3 text-primary"></i> Отгадайте ребус, используя подсказки
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-keyboard me-3 text-primary"></i> Для ввода ответа используйте кнопки с буквами осетинского алфавита
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-question-circle me-3 text-primary"></i> У вас есть 3 подсказки для каждого ребуса
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-trophy me-3 text-primary"></i> За каждый правильный ответ вы получаете 20 очков
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-chart-line me-3 text-primary"></i> Ваш рейтинг сохраняется в системе
+                        </li>
+                    </ol>
+                </div>
+                <div class="card-footer text-muted">
+                    <button onclick="window.location.href='{{ url_for('index') }}'" class="btn btn-primary">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
