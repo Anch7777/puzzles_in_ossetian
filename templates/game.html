@@ -27,16 +27,13 @@
     </div>
     <p class="mt-3">Ваш текущий счет: <span class="badge bg-primary fs-5">{{ score }}</span></p>
 </div>
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const hintButton = document.getElementById("hint-button");
         const hintText = document.getElementById("hint-text");
-
         // Получаем подсказки из базы данных
         const hints = "{{ rebus.hints | safe }}".split(', ');
         let hintsUsed = 0;
-
         hintButton.addEventListener("click", function () {
             if (hintsUsed < hints.length) {
                 hintText.textContent = hints[hintsUsed];
@@ -46,7 +43,6 @@
                 alert("Вы использовали все подсказки!");
             }
         });
-
         // Кнопка "Убрать символ"
         const clearButton = document.getElementById("clear-button");
         const answerInput = document.getElementById("answer-input");

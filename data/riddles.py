@@ -1,4 +1,4 @@
-from data._all_models import db
+from .db_session import db
 
 class Riddle(db.Model):
     __tablename__ = 'riddles'

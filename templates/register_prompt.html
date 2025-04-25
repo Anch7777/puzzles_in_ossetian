@@ -3,7 +3,9 @@
 <div class="text-center">
     <h1>Продолжить игру?</h1>
     <p>Вы решили 3 ребуса! Зарегистрируйтесь, чтобы сохранить свой прогресс.</p>
+    <form method="POST">
+        <button type="submit" name="action" value="continue_as_guest" class="btn btn-secondary">Продолжить без регистрации</button>
+    </form>
     <a href="{{ url_for('register') }}" class="btn btn-primary">Зарегистрироваться</a>
-    <a href="{{ url_for('game', rebus_id=rebus.id + 1) }}" class="btn btn-secondary">Продолжить без регистрации</a>
 </div>
 {% endblock %}
