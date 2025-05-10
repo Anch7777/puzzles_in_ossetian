@@ -45,14 +45,17 @@ with app.app_context():
     except Exception as e:
         print(f"Ошибка при создании базы данных: {e}")
 
+
 # Маршруты
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/rules')
 def rules():
     return render_template('rules.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -68,6 +71,7 @@ def login():
         else:
             flash('Неверное имя пользователя или пароль.', 'danger')
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -89,6 +93,7 @@ def register():
             return redirect(url_for('game'))
     return render_template('register.html')
 
+
 @app.route('/logout')
 def logout():
     if 'username' in session and session['username'] != 'Guest':
@@ -100,6 +105,7 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+
 @app.route('/game', methods=['GET', 'POST'])
 def game():
     # Инициализация данных для гостя или загрузка данных пользователя
@@ -107,60 +113,27 @@ def game():
         session['username'] = 'Guest'
         session['score'] = session.get('score', 0)
         session['solved_rebuses'] = session.get('solved_rebuses', [])
-        session['current_rebus_id'] = session.get('current_rebus_id', 1)  # Инициализация текущего ID ребуса
-    else:
-        user = User.query.filter_by(name=session['username']).first()
-        if user:
-            session['score'] = user.score
-            session['solved_rebuses'] = user.solved_rebuses.split(',') if user.solved_rebuses else []
-            session['current_rebus_id'] = session.get('current_rebus_id', 1)
+        session['current_rebus_id'] = session.get('current_rebus_id', 1)
 
-    # Получаем текущий ID ребуса из сессии или параметров запроса
+    # Получаем текущий ID ребуса из параметров запроса или сессии
     current_rebus_id = int(request.args.get('rebus_id', session['current_rebus_id']))
-    session['current_rebus_id'] = current_rebus_id  # Обновляем текущий ID ребуса в сессии
+    session['current_rebus_id'] = current_rebus_id
+
+    # Проверка на уже решенные ребусы
+    while str(current_rebus_id) in session['solved_rebuses']:
+        current_rebus_id += 1
+
+    session['current_rebus_id'] = current_rebus_id
 
     rebuses = Riddle.query.all()
     current_rebus = next((r for r in rebuses if r.id == current_rebus_id), None)
 
-    # Проверка для предложения регистрации после 3-го ребуса
-    if session['username'] == 'Guest' and current_rebus_id > 3:
-        return redirect(url_for('register_prompt', rebus_id=current_rebus_id))
-
-    # Подсказки
-    hints_left_key = f'hints_left_{current_rebus_id}'
-    hints_left = session.get(hints_left_key, 3)
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-        if action == 'check_answer':
-            user_answer = request.form['answer'].strip()
-            if user_answer == current_rebus.answer:
-                if str(current_rebus_id) not in session['solved_rebuses']:
-                    new_score = min(session['score'] + 20, 100)
-                    session['score'] = new_score
-                    session['solved_rebuses'].append(str(current_rebus_id))
-                    # Обновляем данные в БД только для авторизованных пользователей
-                    if session['username'] != 'Guest':
-                        user = User.query.filter_by(name=session['username']).first()
-                        if user:
-                            user.score = new_score
-                            user.solved_rebuses = ','.join(session['solved_rebuses'])
-                            db.session.commit()
-                    flash('Правильно!', 'success')
-                session['current_rebus_id'] = current_rebus_id + 1  # Переход к следующему ребусу
-                return redirect(url_for('game', rebus_id=current_rebus_id + 1))
-            else:
-                flash('Неправильно. Попробуйте еще раз.', 'danger')
-        elif action == 'show_hint':
-            if hints_left > 0:
-                hints_left -= 1
-                session[hints_left_key] = hints_left
-                flash(f"Подсказка: {current_rebus.hints}", 'info')
-            else:
-                flash("У вас закончились подсказки для этого ребуса!", 'warning')
-
+    # Если все ребусы решены
     if current_rebus is None:
         return redirect(url_for('success'))
+
+    hints_left_key = f'hints_left_{current_rebus_id}'
+    hints_left = session.get(hints_left_key, 3)
 
     return render_template(
         'game.html',
@@ -170,23 +143,26 @@ def game():
         hints_left=hints_left
     )
 
+
 @app.route('/rating')
 def rating():
     ratings = User.query.order_by(User.score.desc()).all()
     return render_template('rating.html', ratings=ratings)
 
+
 @app.route('/success')
 def success():
     return render_template('success.html')
+
 
 @app.route('/register_prompt/<int:rebus_id>', methods=['GET', 'POST'])
 def register_prompt(rebus_id):
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'continue_as_guest':
-            # Продолжаем игру с того же места
             return redirect(url_for('game', rebus_id=rebus_id))
     return render_template('register_prompt.html', rebus_id=rebus_id)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
