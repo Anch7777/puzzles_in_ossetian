@@ -1,10 +1,19 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="text-center">
     <h1>Поздравляем!</h1>
     <p>Вы решили все ребусы!</p>
     <img src="{{ url_for('static', filename='images/congratulations.png') }}" alt="Поздравления" class="img-fluid mb-3">
-    <a href="{{ url_for('index') }}" class="btn btn-primary">Вернуться на главную</a>
+
+    {% if show_register_prompt %}
+        <p>Зарегистрируйтесь, чтобы сохранить свой прогресс.</p>
+        <div class="d-grid gap-3 col-md-6 mx-auto">
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Зарегистрироваться</a>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Вернуться на главную</a>
+        </div>
+    {% else %}
+        <p>Ваш прогресс сохранен. Спасибо за игру!</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Вернуться на главную</a>
+    {% endif %}
 </div>
 {% endblock %}
